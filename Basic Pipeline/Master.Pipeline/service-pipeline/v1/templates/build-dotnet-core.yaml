@@ -1,0 +1,42 @@
+parameters:
+  - name: solution
+    default: ''
+  - name: BuildConfiguration
+    default: ''
+
+steps:
+- task: UseDotNet@2
+  displayName: 'Use .NET Core sdk'
+  inputs:
+    packageType: sdk
+    version: 5.x
+
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet build'
+  inputs:
+    projects: '$(solution)'
+    arguments: '--no-restore'
+
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet test'
+  inputs:
+    command: test
+    projects: |
+     **/*test*/*.csproj 
+     !**/*.Api.Test.csproj
+    arguments: '--configuration $(buildConfiguration) --no-restore'
+
+- task: DotNetCoreCLI@2
+  displayName: 'Publish'
+  inputs:
+    command: publish
+    publishWebProjects: false
+    projects: '$(solution)'
+    arguments: '--configuration $(buildConfiguration) --output $(build.artifactstagingdirectory) --no-restore'
+    zipAfterPublish: false
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: drop_dotnet'
+  inputs:
+    PathtoPublish: '$(build.artifactstagingdirectory)/service-repo'
+    ArtifactName: 'drop_dotnet'

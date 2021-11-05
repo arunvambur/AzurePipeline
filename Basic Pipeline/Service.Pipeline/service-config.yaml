@@ -1,0 +1,6 @@
+buildParameter:
+  repoName: 'Service.Pipeline'
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+  projectName: 'Service.Pipeline'
