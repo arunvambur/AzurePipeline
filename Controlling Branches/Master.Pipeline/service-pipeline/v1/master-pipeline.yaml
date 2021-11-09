@@ -1,0 +1,36 @@
+parameters:
+  - name: checkoutRepos
+    type: stepList
+    default: []
+
+stages:
+- stage: BuildDotNet
+  displayName: Build Dot Net
+  jobs:
+  - job: RSGBuildDotNet
+    displayName: Read Service Configs
+    steps:
+    - ${{ each repo in parameters.checkoutRepos }}:
+      - ${{ each step in repo }}:
+            ${{ step.key }}: ${{ step.value }}
+
+  - job: BuildDotNet
+    dependsOn: RSGBuildDotNet
+    #condition: eq( dependencies.RSGBuildDotNet.outputs['sc.pipeline.build'], 'true')
+    variables:
+      solution: $[ dependencies.RSGBuildDotNet.outputs['sc.param.solution'] ]
+      buildConfiguration: $[ dependencies.RSGBuildDotNet.outputs['sc.param.buildConfiguration'] ]      
+    displayName: Build dotnet core project
+    steps:
+      - ${{ each repo in parameters.checkoutRepos }}:
+        - ${{ each step in repo }}:
+            ${{ step.key }}: ${{ step.value }}      
+        
+      #Prepare dotnet core project
+      - template: templates/prepare-dotnet-core.yaml
+        
+      #Build dotnet core project"
+      - template: templates/build-dotnet-core.yaml
+        parameters:
+          solution: $(solution)
+          buildConfiguration: $(buildConfiguration)

@@ -1,0 +1,55 @@
+resources:
+  repositories:
+  - repository: self
+    type: git
+    name: Service.Pipeline
+
+  - repository: master
+    type: git
+    name: Master.Pipeline
+
+trigger:
+  branches:
+    include:
+      - main
+
+pool: 
+  vmImage: 'ubuntu-latest'
+
+variables:
+  featureBranchTriggered: $[startsWith(variables['Build.SourceBranch'], 'refs/heads/feature/')]
+  mainBranchTriggered: $[eq(variables['Build.SourceBranchName'], 'main')]
+  releaseBranchTriggered: $[startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')]
+  serviceConfigFile: "service-config.yaml"
+  system.Debug: true
+
+stages:
+  - template: service-pipeline/v1/master-pipeline.yaml@master
+    parameters:
+      checkoutRepos:
+      - task: PowerShell@2
+        displayName: "Repository folder creation"
+        inputs:
+          targetType: inline
+          script: |
+            New-Item -Path . -Name "$(Build.Repository.Name)" -ItemType "directory" -Force
+            New-Item -Path . -Name Master.Pipeline -ItemType "directory" -Force
+      - checkout: self
+        path: ./s/service-repo
+        clean: true
+      - checkout: master
+        path: ./s/master-repo
+            
+      - task: PowerShell@2
+        inputs:
+          targetType: filePath
+          filePath: master-repo/service-pipeline/v1/scripts/read-service-config.ps1
+          arguments: >
+            $(serviceConfigFile)
+            $(featureBranchTriggered)
+            $(mainBranchTriggered)
+            $(releaseBranchTriggered)
+        name: sc
+        displayName: "Read Service Configuration"
+
+

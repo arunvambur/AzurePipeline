@@ -1,0 +1,27 @@
+buildParameter:
+  repoName: 'Service.Pipeline'
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+  projectName: 'Service.Pipeline'
+
+build:
+  branches:
+    feature:
+      build: true         # drives the build
+      unitTest: true      # drives the unit test
+      publishToLocal: true  # publish the build to local
+      publishToAzure: true  # publish the build to azure artifactory
+      deployToAzure: true # deploy the build to azure
+    main:
+      build: true         
+      unitTest: true      
+      publishToLocal: true  
+      publishToAzure: true  
+      deployToAzure: true 
+    release:
+      build: true         
+      unitTest: true      
+      publishToLocal: true  
+      publishToAzure: true  
+      deployToAzure: true 
