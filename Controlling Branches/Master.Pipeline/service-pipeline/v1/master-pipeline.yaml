@@ -4,7 +4,7 @@ parameters:
     default: []
 
 stages:
-- stage: BuildDotNet
+- stage: Build
   displayName: Build Dot Net
   jobs:
   - job: RSGBuildDotNet
@@ -16,7 +16,7 @@ stages:
 
   - job: BuildDotNet
     dependsOn: RSGBuildDotNet
-    #condition: eq( dependencies.RSGBuildDotNet.outputs['sc.pipeline.build'], 'true')
+    condition: eq( dependencies.RSGBuildDotNet.outputs['sc.pipeline.build'], 'true')
     variables:
       solution: $[ dependencies.RSGBuildDotNet.outputs['sc.param.solution'] ]
       buildConfiguration: $[ dependencies.RSGBuildDotNet.outputs['sc.param.buildConfiguration'] ]      
@@ -34,3 +34,84 @@ stages:
         parameters:
           solution: $(solution)
           buildConfiguration: $(buildConfiguration)
+
+- stage: UnitTest
+  displayName: Unit test dotnet project
+  jobs:
+  - job: RSGUnitTestDotNet
+    displayName: Read Service Configs
+    steps:
+    - ${{ each repo in parameters.checkoutRepos }}:
+      - ${{ each step in repo }}:
+            ${{ step.key }}: ${{ step.value }}
+    
+  - job: TestDotNet
+    dependsOn: RSGUnitTestDotNet
+    condition: eq( dependencies.RSGUnitTestDotNet.outputs['sc.pipeline.unitTest'], 'true')
+    variables:
+      solution: $[ dependencies.RSGUnitTestDotNet.outputs['sc.param.solution'] ]
+      buildConfiguration: $[ dependencies.RSGUnitTestDotNet.outputs['sc.param.buildConfiguration'] ]      
+    displayName: Test dotnet core project
+    steps:
+      - ${{ each repo in parameters.checkoutRepos }}:
+        - ${{ each step in repo }}:
+            ${{ step.key }}: ${{ step.value }}   
+
+      #Prepare dotnet core project
+      - template: templates/prepare-dotnet-core.yaml
+        
+      #Test dotnet core project"
+      - template: templates/test-dotnet-core.yaml
+        parameters:
+          solution: $(solution)
+          buildConfiguration: $(buildConfiguration)
+
+- stage: PublishToLocal
+  displayName: Publish dotnet project
+  jobs:
+  - job: RSGPublishDotNet
+    displayName: Read Service Configs
+    steps:
+    - ${{ each repo in parameters.checkoutRepos }}:
+      - ${{ each step in repo }}:
+            ${{ step.key }}: ${{ step.value }}
+  
+  - job: PublishDotNet
+    dependsOn: RSGPublishDotNet
+    condition: eq( dependencies.RSGPublishDotNet.outputs['sc.pipeline.publishToLocal'], 'true')
+    variables:
+      solution: $[ dependencies.RSGPublishDotNet.outputs['sc.param.solution'] ]
+      buildConfiguration: $[ dependencies.RSGPublishDotNet.outputs['sc.param.buildConfiguration'] ]      
+    displayName: Publish dotnet core project to local
+    steps:
+      - ${{ each repo in parameters.checkoutRepos }}:
+        - ${{ each step in repo }}:
+            ${{ step.key }}: ${{ step.value }}   
+            
+      #Prepare dotnet core project
+      - template: templates/prepare-dotnet-core.yaml
+        
+      #Publish dotnet core project"
+      - template: templates/publish-dotnet-core.yaml
+        parameters:
+          solution: $(solution)
+          buildConfiguration: $(buildConfiguration)
+
+- stage: DeployToAzure
+  displayName: Deploy dotnet project to azure
+  jobs:
+  - job: RSGDeployToAzureDotNet
+    displayName: Read Service Configs
+    steps:
+    - ${{ each repo in parameters.checkoutRepos }}:
+      - ${{ each step in repo }}:
+            ${{ step.key }}: ${{ step.value }}
+
+    - task: AzureRmWebAppDeployment@4
+      inputs:
+        ConnectionType: 'AzureRM'
+        azureSubscription: '1598e60e-cbcc-4093-a1fd-a6a6ea0d7dd8'
+        appType: 'webAppLinux'
+        WebAppName: 'bs-sample-api'
+        ResourceGroupName: 'branching-strategy-rg'        
+        packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.zip'

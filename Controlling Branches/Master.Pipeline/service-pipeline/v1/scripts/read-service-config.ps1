@@ -42,11 +42,11 @@ if($args[1] -eq $True)
 {
     $branch="feature"
 }
-else if($args[2] -eq $True)
+if($args[2] -eq $True)
 {
     $branch="main"
 }
-else if($args[3] -eq $True)
+if($args[3] -eq $True)
 {
     $branch="release"
 }

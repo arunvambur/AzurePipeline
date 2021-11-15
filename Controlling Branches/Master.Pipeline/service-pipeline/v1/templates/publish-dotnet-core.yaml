@@ -1,0 +1,21 @@
+parameters:
+  - name: solution
+    default: ''
+  - name: BuildConfiguration
+    default: ''
+
+steps:
+  - task: DotNetCoreCLI@2
+    displayName: 'Publish'
+    inputs:
+      command: publish
+      publishWebProjects: true
+      projects: '$(solution)'
+      arguments: '--configuration $(buildConfiguration) --output $(build.artifactstagingdirectory) --no-restore'
+      zipAfterPublish: true
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifact: drop_dotnet'
+    inputs:
+      PathtoPublish: '$(build.artifactstagingdirectory)'
+      ArtifactName: 'drop_dotnet'
