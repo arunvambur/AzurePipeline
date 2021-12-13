@@ -109,9 +109,9 @@ stages:
 
   - job: RSGDeployToAzureDotNet
     dependsOn: RSGDeployToAzure
-    condition: eq( dependencies.RSGPublishDotNet.outputs['sc.pipeline.deployToAzure'], 'true')
+    condition: eq( dependencies.RSGDeployToAzure.outputs['sc.pipeline.deployToAzure'], 'true')
     variables:
-      azueConnection: $[ dependencies.RSGPublishDotNet.outputs['sc.param.azueConnection'] ]
+      azueConnection: $[ dependencies.RSGDeployToAzure.outputs['sc.param.azueConnection'] ]
     displayName: Deploy to Azure App Service
     steps:
     - ${{ each repo in parameters.checkoutRepos }}:
