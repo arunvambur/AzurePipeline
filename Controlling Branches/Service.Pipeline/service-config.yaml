@@ -4,6 +4,7 @@ buildParameter:
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
   projectName: 'Service.Pipeline'
+  azueConnection: 'Azure-Cobssoft'
 
 build:
   branches:

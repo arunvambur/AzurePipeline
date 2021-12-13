@@ -34,6 +34,9 @@ Write-Host "##vso[task.setvariable variable=param.projectName;isOutput=true]$val
 $value = $parsedYAML.buildParameter.solution
 Write-Host "##vso[task.setvariable variable=param.solution;isOutput=true]$value"
 
+$value = $parsedYAML.buildParameter.azueConnection
+Write-Host "##vso[task.setvariable variable=param.azueConnection;isOutput=true]$value"
+
 
 ####################
 #Read branch parameters

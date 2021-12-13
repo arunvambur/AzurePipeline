@@ -100,18 +100,33 @@ stages:
 - stage: DeployToAzure
   displayName: Deploy dotnet project to azure
   jobs:
-  - job: RSGDeployToAzureDotNet
+  - job: RSGDeployToAzure
     displayName: Read Service Configs
     steps:
     - ${{ each repo in parameters.checkoutRepos }}:
       - ${{ each step in repo }}:
             ${{ step.key }}: ${{ step.value }}
 
+  - job: RSGDeployToAzureDotNet
+    dependsOn: RSGDeployToAzure
+    condition: eq( dependencies.RSGPublishDotNet.outputs['sc.pipeline.deployToAzure'], 'true')
+    variables:
+      azueConnection: $[ dependencies.RSGPublishDotNet.outputs['sc.param.azueConnection'] ]
+    displayName: Deploy to Azure App Service
+    steps:
+    - ${{ each repo in parameters.checkoutRepos }}:
+      - ${{ each step in repo }}:
+            ${{ step.key }}: ${{ step.value }}
+    
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifact: 'drop_dotnet'
+        path: $(Build.SourcesDirectory)/bin
+
     - task: AzureRmWebAppDeployment@4
       inputs:
         ConnectionType: 'AzureRM'
-        azureSubscription: '1598e60e-cbcc-4093-a1fd-a6a6ea0d7dd8'
-        appType: 'webAppLinux'
-        WebAppName: 'bs-sample-api'
-        ResourceGroupName: 'branching-strategy-rg'        
-        packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.zip'
+        azureSubscription: Azure-Cobssoft
+        appType: 'webApp'
+        WebAppName: 'BranchingStrategy'
+        packageForLinux: '$(Build.SourcesDirectory)/**/*.zip'
